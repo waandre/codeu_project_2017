@@ -14,6 +14,8 @@
 
 package codeu.chat.client;
 
+import io.prometheus.client.Counter
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.Thread;
@@ -36,6 +38,8 @@ public class Controller implements BasicController {
 
   private final ConnectionSource source;
 
+  static final Counter users = Counter.build().name("users_total").help("Total users").register();
+
   public Controller(ConnectionSource source) {
     this.source = source;
   }
@@ -54,6 +58,7 @@ public class Controller implements BasicController {
 
       if (Serializers.INTEGER.read(connection.in()) == NetworkCode.NEW_MESSAGE_RESPONSE) {
         response = Serializers.nullable(Message.SERIALIZER).read(connection.in());
+        users.inc(); //increment the count for users (prometheus)
       } else {
         LOG.error("Response from server failed.");
       }
